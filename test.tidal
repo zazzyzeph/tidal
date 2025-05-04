@@ -1,0 +1,115 @@
+do
+  let pat = "{0@3 0@3 0@10 0@7 1@9 0 0 0@3 2@7}%16"
+      mod p = every 2 rev $ p
+      wrapper a = (unwrap $ fmap (a !!) $ pat)
+      notemap = note (wrapper ["-12", "<0!2 -4 -8>", "<-24 -21>"])
+      drummap = chan (wrapper [2, 1, 0])
+      progmap = prog (wrapper [32, "<16!3 17n", 0])
+      ccmap = (rarely (0.5 ~>) $ ccv (wrapper [(range 0 127 $ sine), 0, 0]) # ccn 1)
+      ccmap2 = (sometimes (0.25 ~>) $ ccv (wrapper [0, range 0 127 $ sine, 64]) # ccn 2)
+  d1
+    $ stack [
+      rarely (fast (range 1 2 $ sine)) $ mod $ drummap # notemap # progmap # ccmap2 # ccmap
+
+-- goofy map example
+
+do
+  let pat = "{0@3 0@3 0@10 0@7 1@9 0 0 2@3 0@4 1@7 2@7}%16"
+      mod p = whenmod 6 8 (rev . (|* speed "1!3 -1")) $ p
+      wrapper a = (unwrap $ fmap (a !!) $ pat)
+      bdmap = (every 3 (rot 2) $ wrapper ["[bd:12]", "~", "~"])
+      nummap = (every 3 (rot 2) $ wrapper ["~", "[[sn:3|sn:8], [<[[numbers:1|numbers:2|numbers:3], [numbers:5|numbers:7|numbers:4]] ~!3>]]", "~"])
+      hhmap = (every 3 (rot 2) $ wrapper ["~", "~", "[ch:5|ch:3|cym:2]"])
+      revwrap = (wrapper [0.3, 0.9, 0.5])
+  d1 $ every 7 (# crush "32 16 24") $ every 4 (iter "1 4 1 1") $ rip "[-0.7|0.8]" "[0.0125|0.125|0.333]" $ mod $ stack [
+        s bdmap,
+        s nummap,
+        s hhmap 
+        -- whenmod 10 7 (echoWith "<4 8 7 0 2>" "<0.0125 0.025 0.125>" (|* speed "0 0.95") . (# lpf 0.5) . (# gain 0.9)) $ every 4 ((# crush "32 16 24") . (|*| speed 2)) $ splice 16 "5 6 7 5 6 7 8 9 10" $ s "am2" # amp 0.9 # orbit 1,
+        -- s "mpad0" # orbit 1 # cut 1 # amp 0.2 # n (choose [0,2,1])
+      ] # note "c5" # legato 1 # room revwrap # size 0.9
+
+do
+  let pat = ("<0 1 2 3>")
+      mod p = whenmod 6 8 (rev . (|* speed "1!3 -1")) $ p
+      wrapper a = (unwrap $ fmap (a !!) $ pat)
+      soundmap = (wrapper (["bd", "ch", "sn", "cym:8"]))
+      revwrap = (wrapper [0.3, 0.9, 0.5])
+  d1 $ stack [
+      shuffle 4 $ struct "[t*4|t*7|t*6|t*5]" $ sound soundmap # legato 1
+    ]
+
+d1 $ sound "stb ~ stb stb" # note (choose [0,2,3])
+
+-- pat masks
+do
+  let pat1 = (ascii "<[u n] a l!2 e>")
+      pat2 = (ascii "<b i b i!2>")
+      gtfo = (degradeBy 1)
+  d1 $ whenmod 16 8 ((iter "<1 4>") . (|* speed "1!7 -1 1")) $ whenmod 8 6 (# hpf "[0 1000]/2") $ stack [
+    degradeBy "0 0.5!3" $ rarely (echo 4 (1/16) 0.7) $  whenmod "<8 4>" "<3 2 1>" (mask pat2) $ struct pat1 $ s "bd:3" # cut 1 # mu 5,
+    every 7 (echo 4 0.0125 0.9) $ stack [
+    whenmod "<8 4>" "<3 2 1>" (mask (inv pat2)) $ struct (inv pat1) $ s "ch:6" # legato 1,
+    whenmod "<8 10>" "<6 2 5>" (mask pat1) $ echoWith 8 (1/16) ((|*| bpf 0.5)) $ struct pat2 $ s "<stb!3 [~ numbers:8]>" # cut 2 # bpf 1000 # resonance 0.3 # speed 2,
+    every 17 (echoWith "1! 16" (1/16) (|* lpf 0.7)) $ whenmod "<8 10>" "<6 2 5>" (mask (inv pat1)) $ struct (inv pat2) $ s "sn:12*32" # legato 1 # rings (range 400 800 $ slow 4 $ sine) 0.1 0.3 sine (saw * 0.8) # lpf 5000,
+    sound "~ sn:2"] # triode 0.5 # amp 1.1 # verb "<[[0.1 0.7]|[0.8 0.5]]>" 0.7 0.1 0.2 # verbdiff 0.8
+    ] # room 0.4 # sz 0.6 # hpf 0
+
+
+makeBus name busId pat = pF name pat # pI ("^" ++ name) busId
+makeRecv name busId = pI ("^ ++ name") busId
+
+
+do
+  let pat1 = (ascii "a s d f")
+      timbreBus = makeBus "timbre"
+      morphBus = makeBus "morph"
+  d1
+    $ stack [
+       rolledBy "[0.125|0.05|0.2]"
+         $ note "<c'm9'o'5@2 f'm9'o'7 bf3'm13'o'8>/4"
+         # s "plaits"
+         # engine 2
+         # timbreBus 1 (fast 8 $ range 0.05 0.25 sine)
+         # morphBus  1 (fast 2 $ range 0.05 0.9 sine)
+         # harm "<0.5!2 0.25 0.75>"
+         # lpg 0.1 0.8
+         # mode 0
+         # verb 0.9 0.9 0.2 0.05
+         # gain 0.9,
+      stack [
+        whenmod 8 4 (mask "<t*16?!2 t!2>")
+        $ whenmod 16 14 (# sound "bd:12")
+        $ whenmod 4 3 (# hpf "[0 200]")
+        $ almostNever (
+          echoWith "[0 4 2 4]*2" (1/16) (
+            (degradeBy 0.2) . (# hpf 100) . (# decay (1/16))
+          )
+        )
+        $ struct "t(6,16,<0 [0!3 1]>)" 
+        $ sound "bd:2" # mu 2 # amp 0.8 # cut 1,
+        stack [
+          sometimes (echo 4 "<0.125 0.166666>" 0.85) $ s "~ sn:6",
+          whenmod 8 6 (# silence)
+          $ whenmod 4 "<2 4>" (
+            echoWith 4 (1/32) (
+              (|* gain 0.8) . (|* speed 0.8) . (mask "f(6,16,[3 2])")
+            )
+          )
+          $ s "ch:2*16"
+          # n (run "<4 8 16>")
+          # cut 2
+          # gain 0.9,
+          whenmod 16 14 (# gain 0.95)
+          $ slow 2
+          $ s "[~ oh]*<[4 [8 [16 [64 32]]]]>"
+          # speed (slow 2 $ range 1 1.3 saw)
+          # legato 1
+          # gain 0  
+        ] # orbit 6 # room 0.2 # sz 0.2
+      ] # orbit 1
+    ]
+
+setcps 0.6
+
+hush

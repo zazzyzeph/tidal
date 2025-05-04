@@ -1,0 +1,11 @@
+d1 $ sometimes (jux rev) $ rarely (echoWith 4 (1/3) (|* speed "<1 0.9 0.4 0.2>")) $ echoWith 2 (1/6) (|* gain 0.9) $  sound "[bd,hh] hh [sn,hh] hh"
+
+d1  $ sometimes (jux rev) $ rarely (echoWith 4 (1/3) (|* speed "<1 0.9 0.4 0.2>")) $ sound "bd sn hh sn"
+
+d2 $ n "c'maj9'i ! d'maj9'i !" |- "<1 2 4 6>" # s "supermandolin"
+
+
+
+
+
+hush

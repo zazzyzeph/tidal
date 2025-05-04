@@ -1,0 +1,115 @@
+d1 $ "bd oh:1 sn bd oh:1 sn oh:1 sn:1" # cut 1
+
+hush
+
+d2
+  $ rarely (# lpf "1200")
+  $ sometimes (echoWith 4 (1/"<16 32 12 6 [3 64 3 9] 12>") (|* gain 0.8)) $ splice 8 "[5 6 7 5 6 7 2 3]/2" $ s "am2" # amp 1
+   
+d3 $
+  stack [
+  sometimes (echo 4 0.125 0.9) $ n "{<[0|1]>!3}%<7 5 3 11>" # s "m8" # midichan 0 # progNum "<[0!2 1 0] [0!3 [0 1]]>",
+  n "<1*7 [~ 2](3, 5, 9)>" # s "m8" # midichan 1 # progNum "<[16!3 17] [17 16 17 16]>"
+]
+  
+  
+  
+d4
+  $ almostNever (slowSqueeze "1 2 3 4")
+  $ rarely (echo "[3|4|5|6]" 0.125 0.9)
+  $ n "0*2"
+  # s "m8"
+  # midichan 0
+  
+d1
+  $ stack [
+    sometimes (fast "<1 1 2*16>") $ n "-24(<3 [3 6] 12!2>,8)*0.5" # s "m8" # midichan 0 # progNum 0,
+    sometimes (slow "{2 2 0.5 4 2 2 0.5}%16") $ s "m8*12" # note "c4" # midichan 1 # progNum 1,
+    s "[~ m8]" # note "c4" # midichan 2 # progNum 2,
+    (slow "{2 2 0.5 4 2 2 0.5}%16") $ s "m8*2?" # note "c4" # midichan 3 # progNum 3
+  ]
+
+
+d1
+  $ whenmod 4 6 (echo 4 0.2 0.5)
+  $ stack [
+     degradeBy (slow 8 $ sine) $ sometimes (slow ("{2 0.25 0.5 0.75 1}%16")) $ note "e2*16%4" # s "m8" # midichan 0 # progNum 0
+    ,note "<e5!3 b4>/2" # s "m8" # midichan 1 # progNum 1
+    , degradeBy (slow 4 $ sine) $ sometimes (fast "{1 2 0.25 0.5 1.33 2}%16") $ arp "down" $ note (scale "minor" "[<e4!3 b4>'min9'o'16]/2" |+ 3) # s "m8" # midichan 2 # progNum 2
+    , slow 2 $ s "~ m8" # n "c4" # midichan 3 # progNum 3 
+    , spin 4 $ ghost $ sometimes (slow ("{[2!3 0.125] 0.25 0.5 0.75 1}%16")) $ note "e3*16%4" # s "m8" # midichan 4 # progNum 4
+    , ccn "2*16" # ccv (range 60 127 $ slow 4 sine) # midichan 1 # s "m8"
+  ]
+
+
+do
+  let pat = "1(<7 3 5>,16,<0 [3 4] 3>)"
+  d1 $ stack [
+      struct (foldEvery [2,4,6] inv $ pat) $ midinote "67" # midichan "0" # progNum "0"
+      , struct (foldEvery [3,5,7] inv $ pat) $ midinote "28" # midichan "4" # progNum "4"
+      , struct (foldEvery [5,11,13] inv $ pat) $ 68 |- note "<0 <2 -5> 5 5>" # midichan "1" # progNum "1"
+      , note "~ c4" # midichan "3" # progNum "3"
+    ] # s "m8"
+
+hush
+
+do
+  let pat = "1(<7 3 5>,16,<0 [3 4] 3>)"
+  d1 $ stack [
+    struct (foldEvery [2, 4, 6] inv $ pat) $ note "c3" # chan 0 # prog "<0!3 1>"
+    , struct (foldEvery [3, 5, 7] inv $ pat) $ midinote "36" # chan 1 # prog 16
+    , whenmod 6 4 (echo 8 0.125 0.85) $ midinote "~ 36" # chan 2 # prog 32
+    , whenmod 6 4 (0.25 ~>) $ struct (foldEvery [3, 5, 7] inv $ pat) $ note "[b2|c1]" # chan 3 # prog 48
+    ] # s "m8"
+  p "midiclock" $ midicmd "midiClock*48" # s "m8"
+    
+
+
+do
+  let pat = "1(<7 3 5>,16,<0 [3 4] 3>)"
+  d1 $ sometimesBy (cF 0.1 "f0") (repeatCycles 3) $ stack [
+    struct (foldEvery [2, 4, 6] inv $ pat) $ note "c3" # chan 0 # prog 0
+    ] # s "m8"
+    
+-- test 2
+do
+  let pat = "{0@3 0@3 0@10 0@7 1@9 0 0 0@3 2@7}%16"
+      mod p = every 2 rev $ p
+      wrapper a = (unwrap $ fmap (a !!) $ pat)
+      notemap = note (wrapper ["-12", "<0!2 -4 -8>", "<-24 -21>"])
+      drummap = chan (wrapper [2, 1, 0])
+      progmap = prog (wrapper [32, "<16!3 17>", 0])
+      ccmap = (rarely (0.5 ~>) $ ccv (wrapper [(range 0 127 $ sine), 0, 0]) # ccn 1)
+      ccmap2 = (sometimes (0.25 ~>) $ ccv (wrapper [0, range 0 127 $ sine, 64]) # ccn 2)
+  d1
+    $ stack [
+      rarely (fast (range 1 2 $ sine)) $ mod $ drummap # notemap # progmap # ccmap2 # ccmap
+
+do
+  let pat = "{0@3 0@3 0@10 0@7 1@9 0 0 0@3 2@7}%16"
+      mod p = every 2 rev $ p
+      wrapper a = (unwrap $ fmap (a !!) $ pat)
+      notemap = note (wrapper ["-12", "<0!2 -4 -8>", "<-24 -21>"])
+      drummap = chan (wrapper [2, 1, 0])
+      progmap = prog (wrapper [32, "<16!3 17>", 0])
+      ccmap = (rarely (0.5 ~>) $ ccv (wrapper [(range 0 127 $ sine), 0, 0]) # ccn 1)
+      ccmap2 = (sometimes (0.25 ~>) $ ccv (wrapper [0, range 0 127 $ sine, 64]) # ccn 2)
+  d1
+    $ stack [
+      rarely (fast (range 1 2 $ sine)) $ mod $ drummap # notemap # progmap # ccmap2 # ccmap
+    ] # s "m8"
+    
+    
+
+d1 $ stack [
+  note "[c3(3,8)]*2" # sound "m8" # chan 0,
+  always (0.5 ~>) $ note "[c3(3,8)]*2" # sound "m8" # chan 1
+]
+
+setcps (160/60/4)
+
+hush
+
+d1 $ sound "ch:1*3" # speed (cF 0.4 "hello")
+
+setcps (160/60/4)

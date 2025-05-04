@@ -1,0 +1,38 @@
+d2 $ whenmod 16 12 (# lpf "1000 500")
+  $ almostNever ((# speed "-1") . (# fea 0.9))
+  $ stack [
+    whenmod 8 6 (# hpf "400")
+      $ ("<0 0.125>" ~>)
+      $ s "[bd:8(3,8,<1 2>)]*2" # amp 0.8 # orbit 1 # cut 1,
+    rarely (jux rev) 
+      $ almostNever (# speed "[1 | -1]")
+      $ rarely (echoWith 8 0.0625 ((|* speed 0.9)))
+      $ sometimes (echo 4 (1/16) 0.75) 
+      $ s "ch:1(6,16,<1 2 3>)"
+      # speed 1,
+    s "oh*2" # n "<6>",
+    every 4 (# gain 0)
+      $ sometimes (# fea "[0.4|0|0.7]")
+      $ s "mpanalog(7,16,2)"
+      # n "{f4@3 e4@7 ef5@14}%16"
+      # fed (slow 2 $ (saw * 0.5 + 0.2))
+      # fr (slow 4 $ (sine * 0.7))
+      # amp 0.2
+      # orbit 2
+      # hpf 400
+      # silence,
+    superimpose ((# room "0.2") . (# n "6"))
+      $ every 3 (echoWith 8 (1/4) (|* speed 0.98))
+      $ sometimes (echo 4 (1/"[4|8|16|32]") 0.85) $ s "[~ sn:6]*2" # cut 2,
+    jux rev
+      $ whenmod 4 3 (|* speed "-1.1")
+      $ superimpose ((# speed "0.97") . (# pan 0))
+      $ slow 8 
+      $ striate' 64 (1/9)
+      $ s "numbers:7 numbers:3 numbers:5"
+        # bpf 2000 # pan 1 # speed 1 # room 0.9 # size 0.5 # orbit 2
+  ] 
+
+hush
+
+cps (160/120/2)

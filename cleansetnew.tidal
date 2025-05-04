@@ -1,0 +1,190 @@
+
+flood " <<>> "
+
+
+do
+  let notes = "<1'min9'd2'<6 8> [-12,0,3,7,11] [1'min7'o 3'min9'o'<7 9 5>] 6'min9'o>"
+  d1
+    $ stack [
+      arp "<down!3 up!2>"
+      $ fast 2
+      $ note (notes |- "[0|12|-12]")
+      # sound "mpanalog"
+      # gain 0.8
+      # room 0.7
+    ]
+
+
+-- sacresanct
+do
+  let notes = "0'maj9'<4 5 6> 2'maj9'o'<4 7> 4'maj9'<3 5 4 9> -2'maj9'<4 6 5>"
+  d4 $ s "~"
+  d1
+    -- $ degradeBy 0.9
+    -- $ within (0.25, 0.75) (degradeBy 0.5)
+    -- $ whenmod 4 3 ((iter "[1 4]/4") . (# room 0.6) . (|* gain 0.85))
+    $ always (# nudge (slow 4 $ range 0 0.1 $ sine))
+    $ stack [
+      arp "[up|down]*3"
+      $ sb 0.1 (# speed "[-1|1]*8")
+      $ note (scale "lydian" notes |+ "<12!3 -12>")
+      # s "perc:0"
+      # legato 1
+      -- # phaserdepth (slow 2 $ range 0.3 0.8 $ sine)
+      -- # phaserrate ((slow 4 $ range 20 "<200 800 400>" $ sine) |+ (slow 5 $ range 20 100 $ sine))
+      # room 0.2
+      # gain 0.8
+      # amp 1
+      ,
+      fuc $ sb 0.2 (|* speed "[-1|1]*4")$ sb 0.5 (echoWith "<2!3 4>" 0.0625 (|* gain "<[[0.87|0][0.97|0]]!3 0.94>")) $ s "[bd:6(3,8,2)]" # amp 0.8 # orbit 1
+      ,
+      sb 0.2 (rip 0.9 (1/64)) $ stack [
+        fuc $ whenmod 8 2 (rip' 0.9 (1/64) (|* lpf "2000")) $ press $ s "ch:3(<4 3>,<8 12 4>,2)" # amp 0.4,
+        fuc $ s "[~ sn:8]/2" # delay 0.5 # delayt 0.125 # delayfb 0.5
+      ],
+      fuc $ whenmod 3 8 (|* (press $ gain "0.1(3,8,2") ) $ s "mpad0" # n (select "0.75 0.25" ["<4!2 5!2 4!2 5!2 4!2 5!2 ~ ~ 2 3>", "<0 1 2 3>/2"]) # cutoff (slow 2 $ sine * 3000 + 400) # amp 0.2 # cut 1
+    ] 
+
+hush
+
+-- jongleman's jerny
+do 
+  d1 $ s "~"
+  d2 
+    $ stack [
+      degradeBy (slow 4 $ range 0.1 0.7 $ sine) $ sb 0.2 (jux rev)
+        $ arp "[converge]*2"
+        $ note ((scale "minor" "<c4'min7'<8 6>!6 [g4'min7'<3 4> bf4'min7'6]>") |+ "2")  
+        # filtenvatk (slow 5 $ range 0 2 $ sine)
+        # filtenvdcy (slow 7 $ range 0 2 $ sine)
+        # gain 0.6
+        # room 0.3
+        # size 0.98
+        # s "mpanalog",
+      sb 0.2 (rip 0.9 0.125) $ stack [
+        fuc $ "<[bd:8!<4 3> ~@<3 4>] [bd:8!<4 3> ~@<3 4>]/4>" # speed 0.9 # orbit 1,
+        fuc $ sb 0.2 (|* speed 1.1) $ s "[~ ch]!4 ~!3",
+        fuc $ sb 0.3 (|* speed "1 -1") $ s "~!4 [sn:6@3|sn:1*2!3]"
+      ],
+      fuc $ every 7 (fuc) $ note ((scale "minor" "<[c5!6|c4!6] g4 bf4>") |+ 2 + "0@3 12@4") # s "harmon" # gain 0.8
+    ] 
+    
+
+hush
+
+-- elegy
+
+do
+  let pat = (ascii "<{k h a n y o u n i s}%7>/4")
+  let switch = "t@3 f@4"
+  let patsize = 7
+  d2 $ s "~"
+  d3
+    $ degrade
+    $ whenmod 8 6 ((# hpf 800) . (# room 0.9) . (iter 7))
+    $ sometimesBy 0.3 (jux rev) 
+    -- $ iter 14
+    $ stack [
+        struct pat
+        $ degradeBy 0.08
+        $ s "harmon"
+        # note ("{<c5 ef5 d4 g4>}%7/4" |- "<24>")
+        # decay 0.2
+        # spacing "0.2"
+        # gain 0.8
+        ,
+        fuc $ slow "2 <3 -1>" $ every 4 (# n "14 15") $ struct pat $ s "bd:7" # amp 1 # gain 0.9 # orbit 1,
+        stack [
+        sb 0.2 (rip 0.9 (1/32)) $ stack [
+          struct (inv pat) $ slow 4 $ whenmod 4 8 (# n 3) $ s "~@4 sn*3?" # gain 0.9 # room 0.4 # legato 1,
+          whenmod 8 6 (# n "[4|1|2]*4") $ every 4 ((# s "oh:3")) $ struct (inv pat) $ s "ch" # legato 1 # pan "[0|1]*8" # speed 1 # gain 0.9
+        ] # room 0.5
+      ]
+      ,
+      degradeBy 0.9 $ rolledBy (choose [(1.5/patsize),(2/patsize),(0.25/patsize)])
+        $ n "[{<c4'min9'<o d2>'<i ii>'7 ef4'min9'd3'7 d3'min9'<d2 d3 o>'<i ii>'7 g3'min9'd2'7>}%7]/32"
+        # "harmon"
+        # spacing "[0.3|0.4|0.2|0.5]*7"
+        # detune "[22|5|11|19]" # room (slow 5 $ range 0.4 0.9 $ sine) # gain 0.5
+    ]
+    
+hush
+
+-- lack thereof
+    
+do
+  let pat = "1(<3 5>,17,<0 3 5>)" 
+  d3 $ s "~"
+  d4
+    $ whenmod 6 8 (# hpf 3000)
+    -- $ (# nudge (slow 4 $ range 0 1 $ sine))
+    $ stack [
+      fuc $ struct pat
+        $ sometimes (fast 2)
+        $ arp "<[up|updown|converge]>"
+        $ s "perc:<3 5 2 9>"
+        # note (scale "minor" "c5'min11 a5'min11")
+        # amp 1.1
+        # legato 1,
+      stack [
+        struct (inv pat)
+        $ whenmod 15 16 (slow 2)
+        $ whenmod 3 4 (# n "3 5")
+        $ ghost' (1/16) $ s "sn(<3 5>,<8 7 4>,2)" # cut 1,
+        struct (pat)
+          $ s "bd:10/2"
+          # amp 0.6
+          # orbit 1
+        -- struct (inv pat) $ s "stb" # speed (slow 4 $ range 1 2 $ sine) # gain 0.9
+      ]
+    ]
+    # room (slow 4 $ range 0 0.9 $ tri)
+    # gain (slow 4 $ range 1 0.7 $ tri)
+
+hush
+
+-- congress
+do
+  let pat = (binary "<0(<3 5 7>,<8 12>,2)>/[4 5 6 7 8]")
+  let patsize = 8
+  d4 $ s "~"
+  d1
+    -- $ sb 0.2 (jux rev)
+    $ stack [
+      note ("<[g4'dom7'o c4'dom7'o b4'dom7'o e4'dom7'o] [a4'dom7'o d4'dom7'o c4'dom7'o [c4'dom7'o b3'dom7'o]]>/16" |+ 2)
+      # s "mpanalog"
+      # filtcut 5000
+      # filtenvatk "[0.2|2.0|1.0]"
+      # filtenvdcy "[4.0|6.0]"
+      # gain 0.6
+      ,
+      struct pat
+      $ fast 16 $ arp "up" $ note ("<[g4'dom7'o c4'dom7'o b4'dom7'o e4'dom7'o] [a4'dom7'o d4'dom7'o c4'dom7'o [c4'dom7'o b3'dom7'o]]>/16")
+        # s "mpanalog"
+        # filtenvatk 0.01
+        # filtenvdcy 0.8
+        # gain (slow 7 $ range 0.4 0.65 $ sine)
+        ,
+      stack [
+        fuc $ every 4 (# n "14 15") $ struct pat $ slow 4 $ s "bd:5" # amp 0.6 # orbit 1 # legato 1,
+        whenmod 6 8 (rip 0.9 (choose [(1/5), (1/4), 1/7]))
+        $ stack [
+          slow 2 $ struct (inv pat) $ (|* speed 0.9) $ every 4 (# n 3) $ s "sn" # n 0 # room 0.4 # orbit 0,
+          every 4 ((# s "ch:3")) $ struct (inv pat) $ echo 4 (0.125) 0.95 $ s "ch:1" # cut 2 # speed 1
+        ]
+      ],
+      press $ struct pat $ n "<d3 g3 g3 d3>" # "harmon" # gain 1.1 # legato 1.5
+    ]
+    # speed 1
+    # room 0.3
+    # gain 0.8
+
+do
+  let pat = ""
+  
+setcps (135/60/4)
+
+
+hush
+
+
