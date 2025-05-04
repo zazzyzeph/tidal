@@ -3,6 +3,7 @@ let rip' a b f p = within (0.25, 0.75) (slow 2 . rev . stut 8 a b . f) p
     sb a f p = sometimesBy a f p
     topat a p =  unwrap $ fmap (a!!) p
     fuc p = degradeBy 1 $ p
+    shrand x = (x ~> 1) $ rand
     replicator text1 = [putStr (text1) | x <- replicate 3000 text1]
     flood text2 = sequence_(replicator text2)
     chan = midichan
